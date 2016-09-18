@@ -19,6 +19,15 @@ or manually:
 
 # Usage
 
+Invoke the function kbuild.
+
+```sh
+kbuild(kernelName, kernelVersion, configPath)
+```
+- kernelName is the name used in the LOCALVERSION kernel config
+- kernelVersion is the version of kernel to build. The script will download it from kernel.org
+- configPath is the path to the configuration file. If empty string, the script will use the /proc/config.gz.
+
 ```sh
 λ> import kbuild/kbuild
 λ> kbuild("<name-of-the-kernel>", "4.7.4", "")
