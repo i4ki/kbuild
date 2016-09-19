@@ -1,6 +1,6 @@
 # kbuild
 
-Simple script that automate the build and install of linux kernel versions on archlinux.
+Simple [nash](https://github.com/NeowayLabs/nash) script that automate the build and install of linux kernel versions on archlinux.
 
 # Installation
 
