@@ -6,47 +6,58 @@ TMPDIR   = $WORKDIR+"/tmp"
 
 -mkdir -p $BUILDDIR $TMPDIR
 
-fn download(version, outFile) {
+fn download(version) {
+	kfname   = "linux-"+$version+".tar.xz"
+	ktgzpath = $TMPDIR+"/"+$kfname
 	linuxURL = "https://cdn.kernel.org/pub/linux/kernel/v4.x"
-
-	wget -c $linuxURL+"/linux-"+$version+".tar.xz" -O $outFile
-}
-
-fn kbuild(name, version, config) {
-	oldpwd <= pwd | xargs echo -n
-
-	kfname    = "linux-"+$version+".tar.xz"
-	ktgzpath  = $TMPDIR+"/"+$kfname
-
-	canonName <= echo -n $version | sed "s/\\.//g"
 
 	-test -f $ktgzpath
 
 	if $status != "0" {
-		download($version, $ktgzpath)
+		wget -c $linuxURL+"/linux-"+$version+".tar.xz" -O $ktgzpath
 	}
 
-	kbuilddir = $BUILDDIR+"/linux-"+$version
+	return $ktgzpath
+}
 
-	-rm -rf $kbuilddir
-	tar xvf $ktgzpath -C $BUILDDIR
+fn prepare_config(kbuilddir, config) {
+	oldpwd <= pwd | xargs echo -n
 
 	chdir($kbuilddir)
 
-	# build
 	make clean
 	make mrproper
 
-	sedReplace = "s/LOCALVERSION=.*/LOCALVERSION="+$name+"/g"
-
 	if $config == "" {
-		zcat /proc/config.gz | sed $sedReplace > $kbuilddir+"/.config"
+		make localmodconfig
+
+		sedReplace = "s/LOCALVERSION=.*/LOCALVERSION="+$name+"/g"
+
+		cat .config | sed $sedReplace > .config2
+
+		cp .config2 .config
 	} else {
-		cat $config | sed $sedReplace > $kbuilddir+"/.config"
+		cat $config | sed $sedReplace > .config
 	}
 
+	chdir($oldpwd)
+}
+
+fn build(kbuilddir) {
+	oldpwd <= pwd | xargs echo -n
+
+	chdir($kbuilddir)
+
 	make olddefconfig
-	make -j3
+	make -j2
+
+	chdir($oldpwd)
+}
+
+fn install(kbuilddir, version) {
+	canonName <= echo -n $version | sed "s/\\.//g"
+
+	chdir($kbuilddir)
 
 	# install modules
 	sudo make modules_install
@@ -57,11 +68,24 @@ fn kbuild(name, version, config) {
 	sudo cat "/etc/mkinitcpio.d/linux.preset" | sed $replaceKver > /tmp/preset.tmp
 
 	sudo cp /tmp/preset.tmp "/etc/mkinitcpio.d/linux"+$canonName+".preset"
-	sudo mkinitcpio -k $version+"-"+$name -g "/boot/initramfs-linux"+$canonName+".img"
+	sudo mkinitcpio -k $version -c /etc/mkinitcpio.conf -g "/boot/initramfs-linux"+$canonName+".img"
 	sudo cp -v System.map "/boot/System.map-linux"+$canonName
 	sudo ln -sf "/boot/System.map-linux"+$canonName "/boot/System.map"
 	sudo grub-mkconfig -o /boot/grub/grub.cfg
 	echo "Installation finished."
+}
 
+fn kbuild(name, version, config) {
+	oldpwd    <= pwd | xargs echo -n
+	ktgzpath  <= download($version)
+
+	kbuilddir = $BUILDDIR+"/linux-"+$version
+
+	-rm -rf $kbuilddir
+	tar xvf $ktgzpath -C $BUILDDIR
+
+	prepare_config($kbuilddir, $config)
+	build($kbuilddir)
+	install($kbuilddir, $version)
 	chdir($oldpwd)
 }
