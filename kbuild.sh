@@ -3,6 +3,7 @@
 WORKDIR  = $NASHPATH+"/lib/kbuild/workdir"
 BUILDDIR = $WORKDIR+"/build"
 TMPDIR   = $WORKDIR+"/tmp"
+IFS      = ()
 
 -mkdir -p $BUILDDIR $TMPDIR
 
@@ -20,7 +21,7 @@ fn download(version) {
 	return $ktgzpath
 }
 
-fn prepare_config(kbuilddir, config) {
+fn prepare_config(kbuilddir, name, config) {
 	oldpwd <= pwd | xargs echo -n
 
 	chdir($kbuilddir)
@@ -84,7 +85,7 @@ fn kbuild(name, version, config) {
 	-rm -rf $kbuilddir
 	tar xvf $ktgzpath -C $BUILDDIR
 
-	prepare_config($kbuilddir, $config)
+	prepare_config($kbuilddir, $name, $config)
 	build($kbuilddir)
 	install($kbuilddir, $version)
 	chdir($oldpwd)
