@@ -29,7 +29,8 @@ fn prepare_config(kbuilddir, name, config) {
 	make mrproper
 
 	if $config == "" {
-		make localmodconfig
+		# send ENTER to every prompt of new/deprecated opt
+		yes "" | make localmodconfig
 
 		sedReplace = "s/LOCALVERSION=.*/LOCALVERSION="+$name+"/g"
 
@@ -50,7 +51,6 @@ fn build(kbuilddir) {
 
 	chdir($kbuilddir)
 
-	# send ENTER to every prompt of new/deprecated opt
 	yes "" | make olddefconfig
 
 	make -j2
