@@ -3,16 +3,15 @@
 WORKDIR  = $NASHPATH+"/lib/kbuild/workdir"
 BUILDDIR = $WORKDIR+"/build"
 TMPDIR   = $WORKDIR+"/tmp"
-IFS      = ()
 
--mkdir -p $BUILDDIR $TMPDIR
+_, _     <= mkdir -p $BUILDDIR $TMPDIR
 
 fn download(version) {
-	kfname   = "linux-"+$version+".tar.xz"
-	ktgzpath = $TMPDIR+"/"+$kfname
-	linuxURL = "https://cdn.kernel.org/pub/linux/kernel/v4.x"
+	kfname    = "linux-"+$version+".tar.xz"
+	ktgzpath  = $TMPDIR+"/"+$kfname
+	linuxURL  = "https://cdn.kernel.org/pub/linux/kernel/v4.x"
 
-	-test -f $ktgzpath
+	_, status <= test -f $ktgzpath
 
 	if $status != "0" {
 		wget -c $linuxURL+"/linux-"+$version+".tar.xz" -O $ktgzpath
@@ -22,7 +21,7 @@ fn download(version) {
 }
 
 fn prepare_config(kbuilddir, name, config) {
-	oldpwd <= pwd | xargs echo -n
+	oldpwd <= pwd
 
 	chdir($kbuilddir)
 
@@ -38,6 +37,8 @@ fn prepare_config(kbuilddir, name, config) {
 
 		cp .config2 .config
 	} else {
+		rm -f .config
+
 		cat $config | sed $sedReplace > .config
 	}
 
@@ -45,11 +46,13 @@ fn prepare_config(kbuilddir, name, config) {
 }
 
 fn build(kbuilddir) {
-	oldpwd <= pwd | xargs echo -n
+	oldpwd <= pwd
 
 	chdir($kbuilddir)
 
-	make olddefconfig
+	# send ENTER to every prompt of new/deprecated opt
+	yes "" | make olddefconfig
+
 	make -j2
 
 	chdir($oldpwd)
@@ -77,12 +80,13 @@ fn install(kbuilddir, version) {
 }
 
 fn kbuild(name, version, config) {
-	oldpwd    <= pwd | xargs echo -n
+	oldpwd    <= pwd
 	ktgzpath  <= download($version)
 
 	kbuilddir = $BUILDDIR+"/linux-"+$version
 
-	-rm -rf $kbuilddir
+	_, _      <= rm -rf $kbuilddir
+
 	tar xvf $ktgzpath -C $BUILDDIR
 
 	prepare_config($kbuilddir, $name, $config)
