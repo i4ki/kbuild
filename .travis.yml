@@ -2,11 +2,12 @@ os:
   - linux
 
 env:
-  NASHPATH: "/tmp/nash"
+  - NASHPATH: "/tmp/nash"
+    KVERSION: "4.10.8"
 
 matrix:
-  include:
-    - KVERSION: 4.10.8
+  exclude:
+    - NASHPATH: "/tmp/nash"
 
 language: go
 sudo: false
