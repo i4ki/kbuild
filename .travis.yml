@@ -18,4 +18,5 @@ install:
   - go get -v github.com/NeowayLabs/nash/cmd/nash
 
 script:
-  - nash -c "import \"./kbuild.sh\"; bindfn kbuild kbuild; kbuild travis $KVERSION"
+  - ls
+  - nash -c "import \"./kbuild.sh\"; kbuild(\"travis\", $KVERSION)"
