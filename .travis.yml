@@ -10,7 +10,7 @@ matrix:
     - NASHPATH: "/tmp/nash"
 
 language: go
-sudo: false
+sudo: true
 
 go:
   - tip
@@ -19,4 +19,4 @@ install:
 
 script:
   - ls
-  - nash -c "import \"./kbuild.sh\"; kbuild(\"travis\", $KVERSION)"
+  - nash -c 'import "./kbuild.sh"; kbuild("travis", $KVERSION, "")'
