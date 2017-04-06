@@ -29,8 +29,19 @@ fn prepare_config(kbuilddir, name, config) {
 	make mrproper
 
 	if $config == "" {
+		_, status <= test -f /proc/config.gz
+
+		if $status != "0" {
+			printf "There's no config to use..."
+
+			exit("1")
+		}
+
+		rm -f .config
+		zcat /proc/config.gz > .config
+
 		# send ENTER to every prompt of new/deprecated opt
-		yes "" | make localmodconfig
+		yes "" | make oldconfig
 
 		sedReplace = "s/LOCALVERSION=.*/LOCALVERSION="+$name+"/g"
 
